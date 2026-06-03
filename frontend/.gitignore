@@ -1,0 +1,12 @@
+# Frontend (Node / Vite) ignores
+
+node_modules/
+dist/
+coverage/
+*.local
+.eslintcache
+.pnpm-store/
+
+# Secrets / local config (env lives here, not at repo root)
+.env
+*.env.local

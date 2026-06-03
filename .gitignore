@@ -1,0 +1,15 @@
+# Root .gitignore — COMMON / non-language only.
+# Language- or tool-specific ignores live in backend/.gitignore and frontend/.gitignore.
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editors
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Logs
+*.log

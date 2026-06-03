@@ -1,0 +1,12 @@
+# Backend (Java / Maven) ignores
+
+target/
+*.class
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# Secrets / local config (env lives here, not at repo root)
+.env
+*.env.local

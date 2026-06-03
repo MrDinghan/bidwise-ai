@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--
+      Spring dependency injection stores bean references by design; EI_EXPOSE_REP*
+      warnings on injected collaborators are noise. Limited to our config/security
+      wiring rather than excluded globally.
+    -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+        <Or>
+            <Class name="com.bidwise.config.SecurityConfig"/>
+            <Class name="com.bidwise.common.security.JwtAuthenticationFilter"/>
+            <Class name="com.bidwise.auth.AuthService"/>
+            <Class name="com.bidwise.auth.AuthController"/>
+        </Or>
+    </Match>
+
+    <!--
+      JwtService validates its secret in the constructor (Keys.hmacShaKeyFor may
+      throw for a too-short key). Fail-fast at startup is intended.
+    -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+        <Class name="com.bidwise.common.security.JwtService"/>
+    </Match>
+</FindBugsFilter>
