@@ -12,6 +12,27 @@
             <Class name="com.bidwise.common.security.JwtAuthenticationFilter"/>
             <Class name="com.bidwise.auth.AuthService"/>
             <Class name="com.bidwise.auth.AuthController"/>
+            <Class name="com.bidwise.listing.ListingService"/>
+            <Class name="com.bidwise.listing.ListingController"/>
+        </Or>
+    </Match>
+
+    <!--
+      JPA entities deliberately return their managed associations/collections (a
+      defensive copy would detach them from the persistence context), and our DTO
+      records are immutable data carriers. EI_EXPOSE* on these is framework noise.
+    -->
+    <Match>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+        <Or>
+            <Class name="com.bidwise.listing.Listing"/>
+            <Class name="com.bidwise.listing.dto.CreateListingRequest"/>
+            <Class name="com.bidwise.listing.dto.UpdateListingRequest"/>
+            <Class name="com.bidwise.listing.dto.ListingResponse"/>
+            <Class name="com.bidwise.listing.dto.ListingPageResponse"/>
         </Or>
     </Match>
 

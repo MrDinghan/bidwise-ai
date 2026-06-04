@@ -4,6 +4,7 @@ import com.bidwise.common.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -39,6 +40,12 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html")
+                        .permitAll()
+                        // The caller's own listings require auth; declare before the
+                        // public wildcard below so first-match ordering wins.
+                        .requestMatchers(HttpMethod.GET, "/api/listings/mine").authenticated()
+                        // Browsing/searching and viewing a listing is public.
+                        .requestMatchers(HttpMethod.GET, "/api/listings", "/api/listings/*")
                         .permitAll()
                         .anyRequest().authenticated())
                 // Stateless JWT API: respond 401 (not the servlet default 403) when

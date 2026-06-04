@@ -2,6 +2,9 @@ package com.bidwise.common;
 
 import com.bidwise.auth.EmailAlreadyUsedException;
 import com.bidwise.auth.InvalidCredentialsException;
+import com.bidwise.listing.IllegalListingStateException;
+import com.bidwise.listing.ListingAccessDeniedException;
+import com.bidwise.listing.ListingNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -22,6 +25,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException ex) {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(ListingNotFoundException.class)
+    public ResponseEntity<ApiError> handleListingNotFound(ListingNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(ListingAccessDeniedException.class)
+    public ResponseEntity<ApiError> handleListingAccessDenied(ListingAccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalListingStateException.class)
+    public ResponseEntity<ApiError> handleIllegalListingState(IllegalListingStateException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

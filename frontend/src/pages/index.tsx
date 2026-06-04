@@ -1,35 +1,102 @@
 import type { FC } from 'react';
-import { useMe } from '@/api/generated/auth/auth';
-import { useAuthStore } from '@/auth/store';
-import RequireAuth from '@/auth/RequireAuth';
+import { useSearchParams } from 'react-router-dom';
+import { useSearchListings } from '@/api/generated/listings/listings';
+import type { SearchListingsParams } from '@/api/generated/model';
+import ListingCard from '@/components/ListingCard';
+import SearchFilters from '@/components/SearchFilters';
 
-const HomeContent: FC = () => {
-  const logout = useAuthStore((s) => s.logout);
-  const { data: user, isLoading, isError } = useMe();
+const PAGE_SIZE = 12;
 
-  if (isLoading) {
-    return <p>Loading…</p>;
-  }
-  if (isError || !user) {
-    return <p role="alert">Could not load your profile.</p>;
-  }
+const MarketplacePage: FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const q = searchParams.get('q') ?? '';
+  const category = searchParams.get('category') ?? '';
+  const condition = searchParams.get('condition') ?? '';
+  const minPrice = searchParams.get('minPrice') ?? '';
+  const maxPrice = searchParams.get('maxPrice') ?? '';
+  const sort = searchParams.get('sort') ?? 'NEWEST';
+  const page = Number(searchParams.get('page') ?? '0');
+
+  const params: SearchListingsParams = {
+    q: q || undefined,
+    category: (category || undefined) as SearchListingsParams['category'],
+    condition: (condition || undefined) as SearchListingsParams['condition'],
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    sort: (sort || undefined) as SearchListingsParams['sort'],
+    page,
+    size: PAGE_SIZE,
+  };
+
+  const { data, isLoading, isError } = useSearchListings(params);
+  const listings = data?.content ?? [];
+
+  // Changing a filter resets paging; changing the page keeps the filters.
+  const onChange = (key: string, value: string): void => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+      if (key !== 'page') {
+        next.delete('page');
+      }
+      return next;
+    });
+  };
+
+  const totalPages = data?.totalPages ?? 0;
 
   return (
     <main>
-      <h1>Welcome, {user.name}</h1>
-      <p>Email: {user.email}</p>
-      <p>Role: {user.role}</p>
-      <button type="button" onClick={logout}>
-        Log out
-      </button>
+      <h1>Browse listings</h1>
+      <SearchFilters
+        q={q}
+        category={category}
+        condition={condition}
+        minPrice={minPrice}
+        maxPrice={maxPrice}
+        sort={sort}
+        onChange={onChange}
+      />
+
+      {isLoading && <p>Loading…</p>}
+      {isError && <p role="alert">Could not load listings.</p>}
+
+      {data && listings.length === 0 && <p>No listings match your search.</p>}
+
+      <section className="listing-grid">
+        {listings.map((listing) => (
+          <ListingCard key={listing.id} listing={listing} />
+        ))}
+      </section>
+
+      {totalPages > 1 && (
+        <nav className="pagination" aria-label="Pagination">
+          <button
+            type="button"
+            disabled={page <= 0}
+            onClick={() => onChange('page', String(page - 1))}
+          >
+            Previous
+          </button>
+          <span>
+            Page {page + 1} of {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages - 1}
+            onClick={() => onChange('page', String(page + 1))}
+          >
+            Next
+          </button>
+        </nav>
+      )}
     </main>
   );
 };
 
-const HomePage: FC = () => (
-  <RequireAuth>
-    <HomeContent />
-  </RequireAuth>
-);
-
-export default HomePage;
+export default MarketplacePage;
