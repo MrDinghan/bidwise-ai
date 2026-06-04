@@ -23,4 +23,12 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  // shadcn/ui primitives intentionally co-locate components with their cva variant
+  // constants; fast-refresh export purity does not apply to these leaf files.
+  {
+    files: ['src/components/ui/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 );

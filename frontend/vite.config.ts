@@ -2,11 +2,16 @@
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import Pages from 'vite-plugin-pages';
 
 export default defineConfig({
   // File-based routing: routes are derived from src/pages/** (see ~react-pages).
-  plugins: [react(), Pages({ resolver: 'react', dirs: 'src/pages', exclude: ['**/*.test.tsx'] })],
+  plugins: [
+    react(),
+    tailwindcss(),
+    Pages({ resolver: 'react', dirs: 'src/pages', exclude: ['**/*.test.tsx'] }),
+  ],
   resolve: {
     // `@/x` resolves to `src/x` — avoids deep ../../../ relative imports.
     alias: {

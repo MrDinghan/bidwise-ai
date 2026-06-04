@@ -6,7 +6,8 @@ or refine those.
 
 ## Stack
 React 18 + TypeScript (Vite), TanStack Query (server state), Zustand (client state),
-React Router, axios.
+React Router, axios. **UI: Tailwind CSS v4 + shadcn/ui** (Radix primitives), `sonner`
+for toasts, `lucide-react` for icons.
 
 ## Package manager: pnpm
 This subproject uses **pnpm** (pinned via `packageManager` in `package.json`;
@@ -84,6 +85,57 @@ Auth state is the Zustand store `src/auth/store.ts` (`useAuthStore`), persisted 
 localStorage. All requests go through the axios instance in `src/api/mutator.ts`,
 which reads the token from `useAuthStore.getState()` and calls `logout()` on 401.
 Don't read/write the token from `localStorage` directly anywhere.
+
+### 8. Styling: Tailwind v4 + shadcn/ui ("The Auction Catalogue")
+Style with **Tailwind utility classes**; build UI from the **shadcn/ui** primitives in
+`src/components/ui/` (Button, Badge, Input, Label, Select, Textarea, Sonner). Compose
+classes with `cn()` from `@/lib/utils`.
+
+> **Three non-negotiables for any UI work:**
+> 1. **Responsive by default.** Every component/page must work on mobile, not just
+>    desktop. Design mobile-first and verify at ~360px: navigation stays reachable
+>    (no destinations hidden with `hidden sm:*` and no replacement), content stacks,
+>    font sizes scale, and tap targets are adequate. Use Tailwind breakpoints
+>    (`sm:`/`md:`/`lg:`) rather than fixed widths.
+> 2. **Dark theme always.** Both light and dark are first-class (see the theming bullet
+>    below). Build with semantic tokens only — never hardcode `bg-white`/`bg-black`/hex —
+>    and **sanity-check every new screen in dark mode**, not just light.
+> 3. **Use the `frontend-design` skill for visual changes.** When creating or
+>    restyling the look-and-feel (new components/pages, redesigns), drive it through
+>    the `frontend-design` skill — don't hand-roll ad-hoc styling. Routine feature
+>    scaffolding/wiring still goes through the `feature-dev` workflow.
+- **Design language** is an editorial *auction-catalogue* look: warm paper background,
+  near-black ink, a single sharp **persimmon `primary`** for live/CTA/price moments, and
+  an amber **`gold`** reserved for winning-bid highlights. Items read as numbered "lots".
+  Keep new UI consistent with this — hairline borders (`border-foreground/15`), sharp
+  corners (small `--radius`), editorial serif headings, and the mono "ticker" layer for
+  numbers/metadata. Subtle film-grain + paper wash live on `body` in `src/index.css`.
+- **Typography:** `font-display` = Fraunces (headings — base rule already applies it to
+  `h1–h4`), `font-sans` = Hanken Grotesk (body), `font-mono` = JetBrains Mono (lot
+  numbers, prices, timers, labels). Fonts are loaded in `index.html`. Helper classes:
+  `.label-mono` (uppercase mono meta label), `.tabular` (tabular figures),
+  `.animate-lot-rise` (staggered page-load reveal — set `animationDelay` inline).
+- **Design tokens** (colors, radius, fonts) live in `src/index.css` as CSS variables
+  mapped through `@theme` / `@theme inline`. Use the semantic token classes
+  (`bg-background`, `text-muted-foreground`, `border-border`, `bg-primary`,
+  `text-gold-foreground`, …) — **don't hardcode raw colors** like `bg-[#10b981]`.
+- **`src/components/ui/` are shadcn-owned primitives.** Add new ones with the shadcn CLI
+  (`pnpm dlx shadcn@latest add <name>`) rather than hand-rolling; editing an existing
+  primitive is allowed (unlike the Orval-generated client). They are exempt from the
+  `react-refresh/only-export-components` lint rule (see `eslint.config.js`).
+- Feature components/pages compose primitives + Tailwind — don't reach for a different
+  component library or a bespoke CSS file. Tailwind v4 is wired via `@tailwindcss/vite`
+  (no `tailwind.config.js`); the single global stylesheet is `src/index.css`.
+- Toasts: `import { toast } from 'sonner'` (the `<Toaster/>` is mounted in `App.tsx`).
+  Icons: `lucide-react`.
+- **Light + dark mode.** Both palettes live in `src/index.css` (`:root` and `.dark`).
+  Theme state is the Zustand store `src/theme/store.ts` (`useThemeStore`, persisted,
+  defaults to the OS preference); `App.tsx` toggles the `dark` class on
+  `document.documentElement`, and an inline script in `index.html` applies it before
+  paint to avoid a flash. Because everything uses semantic tokens, new UI works in both
+  themes automatically — **always sanity-check new screens in dark too**. For inverted
+  chips use `bg-foreground text-background` (they invert correctly); never hardcode
+  `bg-white`/`bg-black`/hex.
 
 ## Commands
 ```bash
