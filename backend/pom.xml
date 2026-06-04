@@ -100,6 +100,15 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- DevTools: auto-restart on classpath change (dev only; excluded from
+             the production jar). Speeds up the edit-run loop. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
