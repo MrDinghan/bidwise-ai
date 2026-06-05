@@ -39,13 +39,21 @@ public class SecurityConfig {
                                 "/actuator/health/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html")
+                                "/swagger-ui.html",
+                                // WebSocket handshake; topics carry only public listing state.
+                                "/ws/**")
                         .permitAll()
                         // The caller's own listings require auth; declare before the
                         // public wildcard below so first-match ordering wins.
                         .requestMatchers(HttpMethod.GET, "/api/listings/mine").authenticated()
-                        // Browsing/searching and viewing a listing is public.
-                        .requestMatchers(HttpMethod.GET, "/api/listings", "/api/listings/*")
+                        // Placing a bid requires auth; declare before the public GETs.
+                        .requestMatchers(HttpMethod.POST, "/api/listings/*/bids").authenticated()
+                        // Browsing/searching, viewing a listing, and bid history are public.
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/listings",
+                                "/api/listings/*",
+                                "/api/listings/*/bids")
                         .permitAll()
                         .anyRequest().authenticated())
                 // Stateless JWT API: respond 401 (not the servlet default 403) when

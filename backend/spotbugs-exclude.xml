@@ -14,6 +14,12 @@
             <Class name="com.bidwise.auth.AuthController"/>
             <Class name="com.bidwise.listing.ListingService"/>
             <Class name="com.bidwise.listing.ListingController"/>
+            <Class name="com.bidwise.listing.AuctionCloseService"/>
+            <Class name="com.bidwise.listing.AuctionCloseScheduler"/>
+            <Class name="com.bidwise.bid.BidService"/>
+            <Class name="com.bidwise.bid.BidController"/>
+            <Class name="com.bidwise.bid.AtomicBidPrice"/>
+            <Class name="com.bidwise.realtime.ListingBroadcaster"/>
         </Or>
     </Match>
 
@@ -33,6 +39,10 @@
             <Class name="com.bidwise.listing.dto.UpdateListingRequest"/>
             <Class name="com.bidwise.listing.dto.ListingResponse"/>
             <Class name="com.bidwise.listing.dto.ListingPageResponse"/>
+            <Class name="com.bidwise.bid.Bid"/>
+            <Class name="com.bidwise.bid.dto.BidResponse"/>
+            <Class name="com.bidwise.bid.dto.BidPageResponse"/>
+            <Class name="com.bidwise.realtime.BidEvent"/>
         </Or>
     </Match>
 

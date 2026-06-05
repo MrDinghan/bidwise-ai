@@ -18,3 +18,13 @@ spring:
 jwt:
   secret: test-secret-that-is-definitely-long-enough-32b
   expiration-ms: 3600000
+
+# Disable the scheduled auction-close sweep in tests so the H2 suites never reach
+# Redis. The bidding integration test (with a Testcontainers Redis) drives close
+# by calling AuctionCloseService directly.
+auction:
+  close:
+    enabled: false
+  anti-snipe:
+    window-seconds: 60
+    extension-seconds: 120

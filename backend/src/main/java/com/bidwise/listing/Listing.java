@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -73,6 +74,14 @@ public class Listing {
     @Column(name = "current_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal currentPrice;
 
+    /** Highest bidder so far (and the winner once the auction has ended). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_bidder_id")
+    private User currentBidder;
+
+    @Column(name = "bid_count", nullable = false)
+    private int bidCount;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ListingStatus status;
@@ -91,6 +100,13 @@ public class Listing {
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    /**
+     * Optimistic-lock version. The hot bid path updates price atomically via a
+     * guarded SQL statement, so this mainly guards slower edit/close transactions.
+     */
+    @Version
+    private Long version;
 
     /**
      * Creates a new listing in {@link ListingStatus#DRAFT}. The current price starts
@@ -186,6 +202,20 @@ public class Listing {
             throw new IllegalListingStateException("Only an active listing can be cancelled");
         }
         this.status = ListingStatus.CLOSED;
+        this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Ends an active auction whose time is up: {@code ENDED} when there is a winning
+     * bidder (awaiting settlement in P3), otherwise {@code CLOSED} (no bids). The
+     * winner is the current highest bidder. Idempotent guard: only an {@code ACTIVE}
+     * listing can be ended.
+     */
+    public void endAuction() {
+        if (status != ListingStatus.ACTIVE) {
+            throw new IllegalListingStateException("Only an active listing can be ended");
+        }
+        this.status = currentBidder != null ? ListingStatus.ENDED : ListingStatus.CLOSED;
         this.updatedAt = Instant.now();
     }
 }

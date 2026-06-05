@@ -2,6 +2,9 @@ package com.bidwise.common;
 
 import com.bidwise.auth.EmailAlreadyUsedException;
 import com.bidwise.auth.InvalidCredentialsException;
+import com.bidwise.bid.AuctionNotActiveException;
+import com.bidwise.bid.BidTooLowException;
+import com.bidwise.bid.InvalidBidException;
 import com.bidwise.listing.IllegalListingStateException;
 import com.bidwise.listing.ListingAccessDeniedException;
 import com.bidwise.listing.ListingNotFoundException;
@@ -39,6 +42,21 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalListingStateException.class)
     public ResponseEntity<ApiError> handleIllegalListingState(IllegalListingStateException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidBidException.class)
+    public ResponseEntity<ApiError> handleInvalidBid(InvalidBidException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(AuctionNotActiveException.class)
+    public ResponseEntity<ApiError> handleAuctionNotActive(AuctionNotActiveException ex) {
+        return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(BidTooLowException.class)
+    public ResponseEntity<ApiError> handleBidTooLow(BidTooLowException ex) {
         return build(HttpStatus.CONFLICT, ex.getMessage());
     }
 
