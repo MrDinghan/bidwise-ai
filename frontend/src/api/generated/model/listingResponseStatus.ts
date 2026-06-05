@@ -14,6 +14,7 @@ export const ListingResponseStatus = {
   DRAFT: 'DRAFT',
   PENDING_REVIEW: 'PENDING_REVIEW',
   ACTIVE: 'ACTIVE',
+  ENDED: 'ENDED',
   CLOSED: 'CLOSED',
   SOLD: 'SOLD',
   REJECTED: 'REJECTED',

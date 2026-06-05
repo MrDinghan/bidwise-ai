@@ -21,6 +21,9 @@ export interface ListingResponse {
   startPrice?: number;
   bidIncrement?: number;
   currentPrice?: number;
+  currentBidderId?: number;
+  currentBidderName?: string;
+  bidCount?: number;
   status?: ListingResponseStatus;
   startAt?: string;
   endAt?: string;

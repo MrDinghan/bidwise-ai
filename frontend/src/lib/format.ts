@@ -22,6 +22,26 @@ export const formatTimeLeft = (endAt?: string): string => {
   return `${totalHours}h ${minutes}m left`;
 };
 
+/** Compact "time since" label for bid timestamps, e.g. "just now", "3m", "2h", "5d". */
+export const formatTimeAgo = (iso?: string): string => {
+  if (!iso) {
+    return '';
+  }
+  const elapsedMs = Date.now() - new Date(iso).getTime();
+  if (elapsedMs < 60_000) {
+    return 'just now';
+  }
+  const minutes = Math.floor(elapsedMs / 60_000);
+  if (minutes < 60) {
+    return `${minutes}m ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
+  return `${Math.floor(hours / 24)}d ago`;
+};
+
 /** Converts an ISO timestamp to the value a `datetime-local` input expects. */
 export const toDateTimeLocal = (iso?: string): string => {
   if (!iso) {

@@ -7,9 +7,12 @@
  */
 
 export * from './authResponse';
+export * from './bidPageResponse';
+export * from './bidResponse';
 export * from './createListingRequest';
 export * from './createListingRequestCategory';
 export * from './createListingRequestCondition';
+export * from './getBidsParams';
 export * from './getMyListingsParams';
 export * from './listingPageResponse';
 export * from './listingResponse';
@@ -17,6 +20,7 @@ export * from './listingResponseCategory';
 export * from './listingResponseCondition';
 export * from './listingResponseStatus';
 export * from './loginRequest';
+export * from './placeBidRequest';
 export * from './registerRequest';
 export * from './searchListingsCategory';
 export * from './searchListingsCondition';

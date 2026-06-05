@@ -24,6 +24,8 @@ export default defineConfig({
     proxy: {
       '/api': 'http://localhost:8080',
       '/v3': 'http://localhost:8080',
+      // STOMP-over-WebSocket endpoint (ws: true upgrades the connection).
+      '/ws': { target: 'http://localhost:8080', ws: true },
     },
   },
   test: {

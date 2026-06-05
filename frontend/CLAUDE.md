@@ -137,6 +137,22 @@ classes with `cn()` from `@/lib/utils`.
   chips use `bg-foreground text-background` (they invert correctly); never hardcode
   `bg-white`/`bg-black`/hex.
 
+### 9. Real-time updates (WebSocket / STOMP)
+Live auction updates use **STOMP over WebSocket** via `@stomp/stompjs`. Commands
+(placing a bid) still go through the **generated REST hooks**; the socket is
+broadcast-only (server → client).
+- `src/realtime/useListingChannel.ts` subscribes to `/topic/listings/{id}` and folds
+  each event into the TanStack Query cache (`setQueryData` on the listing,
+  `invalidateQueries` on its bids) — UI reads stay in TanStack Query, no socket state
+  in components. Mount it once per listing detail view.
+- The dev server proxies `/ws` to the backend (`vite.config.ts`, `ws: true`).
+- **One sanctioned hand-written API type:** `src/realtime/types.ts` (`BidEvent`).
+  WebSocket payloads are **not** part of the OpenAPI contract, so Orval cannot
+  generate them. This is the *only* place a request/response-ish type is hand-written;
+  it mirrors the backend `com.bidwise.realtime.BidEvent` and must be kept in sync.
+  Everything REST still comes from `src/api/generated/` (see §4) — do not hand-roll
+  other API types.
+
 ## Commands
 ```bash
 pnpm run gen:api   # regenerate API client from the backend OpenAPI spec

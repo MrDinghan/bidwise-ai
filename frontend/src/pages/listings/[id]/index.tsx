@@ -11,7 +11,11 @@ import {
 import { useAuthStore } from '@/auth/store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import BidPanel from '@/components/BidPanel';
+import BidHistory from '@/components/BidHistory';
+import { useListingChannel } from '@/realtime/useListingChannel';
 import { formatPrice, formatTimeLeft } from '@/lib/format';
+import { statusBadgeVariant } from '@/lib/listing';
 
 const lotNumber = (id: number): string => `LOT ${String(id).padStart(3, '0')}`;
 
@@ -28,6 +32,9 @@ const ListingDetailPage: FC = () => {
     refetch,
   } = useGetListing(listingId, { query: { enabled: Number.isFinite(listingId) } });
   const { data: me } = useMe({ query: { enabled: Boolean(token) } });
+
+  // Subscribe to live price/bid/close events for this listing.
+  useListingChannel(listingId);
 
   const publishMutation = usePublishListing();
   const deleteMutation = useDeleteListing();
@@ -55,6 +62,11 @@ const ListingDetailPage: FC = () => {
   const isOwner = me?.id != null && me.id === listing.sellerId;
   const isDraft = listing.status === 'DRAFT';
   const photos = listing.photos ?? [];
+  const isAuthed = Boolean(token);
+  const endsInFuture = listing.endAt != null && new Date(listing.endAt).getTime() > Date.now();
+  const isBiddable = listing.status === 'ACTIVE' && endsInFuture;
+  const isTopBidder = me?.id != null && me.id === listing.currentBidderId;
+  const hasWinner = listing.currentBidderId != null;
 
   const onPublish = (): void => {
     publishMutation.mutate(
@@ -127,7 +139,7 @@ const ListingDetailPage: FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <Badge
-              variant={listing.status === 'ACTIVE' ? 'default' : 'secondary'}
+              variant={statusBadgeVariant(listing.status)}
               className="rounded-sm font-mono text-[0.65rem] uppercase tracking-widest"
             >
               {listing.status}
@@ -143,10 +155,17 @@ const ListingDetailPage: FC = () => {
 
           <div className="mt-6 flex flex-col gap-4 border-y border-foreground/20 py-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="label-mono">Current bid</p>
+              <p className="label-mono">
+                {(listing.bidCount ?? 0) > 0 ? 'Current bid' : 'Starting price'}
+              </p>
               <p className="tabular mt-1 font-mono text-3xl font-semibold text-foreground sm:text-4xl">
                 {formatPrice(listing.currentPrice)}
               </p>
+              {(listing.bidCount ?? 0) > 0 && (
+                <p className="label-mono mt-1 text-muted-foreground">
+                  {listing.bidCount} {listing.bidCount === 1 ? 'bid' : 'bids'}
+                </p>
+              )}
             </div>
             <div className="sm:text-right">
               <p className="label-mono flex items-center gap-1 sm:justify-end">
@@ -171,6 +190,45 @@ const ListingDetailPage: FC = () => {
               Consigned by {listing.sellerName}
             </div>
           </dl>
+
+          {/* Bidding */}
+          {isBiddable && !isOwner && isAuthed && (
+            <BidPanel listing={listing} isTopBidder={isTopBidder} />
+          )}
+          {isBiddable && !isAuthed && (
+            <div className="mt-6 border-t border-foreground/15 pt-5">
+              <p className="label-mono mb-2 text-muted-foreground">Want this lot?</p>
+              <Button
+                asChild
+                className="rounded-sm font-mono text-xs uppercase tracking-widest"
+              >
+                <Link to="/login">Log in to bid</Link>
+              </Button>
+            </div>
+          )}
+          {isBiddable && isOwner && (
+            <p className="label-mono mt-6 border-t border-foreground/15 pt-5 text-muted-foreground">
+              This is your lot — bidding is open to buyers.
+            </p>
+          )}
+          {listing.status === 'ENDED' && (
+            <div className="mt-6 border-t border-foreground/15 pt-5">
+              <p className="font-display text-xl">
+                {isTopBidder ? 'You won this lot.' : `Won by ${listing.currentBidderName}`}
+              </p>
+              <p className="label-mono mt-1 text-muted-foreground">
+                Hammer price {formatPrice(listing.currentPrice)}
+              </p>
+            </div>
+          )}
+          {listing.status === 'CLOSED' && (
+            <p className="label-mono mt-6 border-t border-foreground/15 pt-5 text-muted-foreground">
+              {hasWinner ? 'Auction closed.' : 'Auction closed — no winning bid.'}
+            </p>
+          )}
+
+          {/* History (any published lot) */}
+          {listing.status !== 'DRAFT' && <BidHistory listingId={listingId} />}
 
           {isOwner && (
             <div className="mt-7 flex flex-wrap gap-2 border-t border-foreground/15 pt-5">

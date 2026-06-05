@@ -7,6 +7,7 @@ export const statusBadgeVariant = (status: ListingResponseStatus | undefined): B
   switch (status) {
     case 'ACTIVE':
       return 'default';
+    case 'ENDED':
     case 'SOLD':
       return 'gold';
     case 'DRAFT':
