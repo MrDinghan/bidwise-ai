@@ -51,7 +51,7 @@ const MyListingsContent: FC = () => {
           {listings.map((listing) => (
             <div
               key={listing.id}
-              className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 border-b sm:gap-4 border-foreground/10 px-4 py-3 last:border-0 hover:bg-muted/40"
+              className="relative grid grid-cols-[auto_1fr_auto_auto] items-center gap-3 border-b sm:gap-4 border-foreground/10 px-4 py-3 last:border-0 hover:bg-muted/40"
             >
               <span className="font-mono text-xs font-semibold tracking-wider text-muted-foreground">
                 {String(listing.id ?? 0).padStart(3, '0')}
@@ -59,7 +59,7 @@ const MyListingsContent: FC = () => {
               <div className="min-w-0">
                 <Link
                   to={`/listings/${listing.id}`}
-                  className="block truncate font-display text-base decoration-primary decoration-2 underline-offset-2 hover:underline"
+                  className="block truncate font-display text-base decoration-primary decoration-2 underline-offset-2 hover:underline after:absolute after:inset-0 after:content-['']"
                 >
                   {listing.title}
                 </Link>
@@ -77,7 +77,7 @@ const MyListingsContent: FC = () => {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="font-mono text-xs uppercase tracking-widest"
+                className="relative z-10 font-mono text-xs uppercase tracking-widest"
               >
                 <Link to={`/listings/${listing.id}/edit`}>Edit</Link>
               </Button>

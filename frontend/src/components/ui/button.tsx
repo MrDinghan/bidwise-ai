@@ -1,4 +1,4 @@
-import type { ComponentProps, FC } from 'react';
+import { forwardRef, type ComponentProps } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
@@ -37,15 +37,21 @@ type ButtonProps = ComponentProps<'button'> &
     asChild?: boolean;
   };
 
-const Button: FC<ButtonProps> = ({ className, variant, size, asChild = false, ...props }) => {
-  const Comp = asChild ? Slot : 'button';
-  return (
-    <Comp
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  );
-};
+// forwardRef so the button can act as a Radix trigger (DropdownMenu/Popover/etc.),
+// which needs a ref on its child to anchor and position the floating content.
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'button';
+    return (
+      <Comp
+        ref={ref}
+        data-slot="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...props}
+      />
+    );
+  },
+);
+Button.displayName = 'Button';
 
 export { Button, buttonVariants };

@@ -18,7 +18,9 @@ instance.interceptors.request.use((config) => {
 });
 
 instance.interceptors.response.use(
-  (response) => response,
+  // Unwrap to the response body so generated hooks resolve to `T` (the DTO),
+  // matching the `customInstance<T>` return type — not the full AxiosResponse.
+  (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();

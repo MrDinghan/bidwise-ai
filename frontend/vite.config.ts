@@ -32,7 +32,13 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     coverage: {
       provider: 'v8',
-      exclude: ['src/api/generated/**', '**/*.config.*', 'src/main.tsx'],
+      exclude: [
+        'src/api/generated/**', // generated API client — not hand-written code
+        '**/*.config.*',
+        'src/main.tsx',
+        'dist/**', // build artifacts, not source
+        'coverage/**', // the coverage report itself
+      ],
     },
   },
 });
