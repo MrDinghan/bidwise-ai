@@ -206,6 +206,11 @@ SoldComparable  // derived from CLOSED/SOLD Listings, for valuation RAG retrieva
 - Use **test mode** throughout; resume phrasing: "implemented a complete
   pre-auth–capture–release flow with idempotent webhook fulfillment" — true and
   sufficient.
+- **Bounded auction duration (decided in P3):** a Stripe pre-auth hold expires after
+  ~7 days, so an auction must finish before the winner's deposit hold lapses —
+  otherwise capture-on-close fails. Therefore the auction window must be bounded, and
+  the cap must stay within the hold's validity (target **≤ 5 days**, leaving margin).
+  See the listing-duration change below.
 
 ---
 
@@ -271,6 +276,17 @@ frontend ESLint (in CI).
   project)
 - **P3:** deposit pre-auth + automatic settlement on close + idempotent webhook (the
   payment highlight)
+  - **Listing duration model change (do together with P3):** today a listing takes an
+    arbitrary future `endAt` (validated only as `@Future`), so a 1-second or 1-year
+    auction is accepted — unreasonable for bidders, and incompatible with the ~7-day
+    Stripe hold expiry (see §9). Change the seller input from a raw `endAt` timestamp
+    to a **duration choice** (e.g. `durationHours`, or a fixed enum of 1/3/5-day
+    options) bounded by `@Min/@Max`; the backend computes `endAt = startAt + duration`
+    on publish (server-authoritative). Cap the max within the Stripe hold validity
+    (≤ 5 days). Contract-first impact: this changes the API, so regenerate the frontend
+    client and switch the create/edit form from a date picker to a duration selector.
+    Interim mitigation in P2: add a simple max-duration guard on `endAt` to close the
+    "1-year auction" hole until the full change lands.
 - **P4:** AI smart listing
 - **P5:** AI valuation/bidding assistant + AI content moderation + review console
 - **P6:** fill in test coverage, notifications, cloud deploy
