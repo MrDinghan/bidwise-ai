@@ -4,16 +4,17 @@ Guidance for working in this repository (read before making changes).
 
 ## What this is
 BidWise AI — a real-time auction marketplace for international students selling
-secondhand goods. Monorepo: Spring Boot backend + React/TS frontend. Current
-milestone is **P0 (project foundation)**; the roadmap is in the README and design
-doc, and is depth-first (get the bidding/payment spine to production grade before
-layering in AI).
+secondhand goods. Monorepo: Spring Boot backend + React/TS frontend. The roadmap is
+depth-first (get the bidding/payment spine to production grade before layering in AI)
+— see the milestone checklist in `README.md` and the full design in
+[`DESIGN.md`](DESIGN.md) for scope, architecture, data model, and per-milestone plan.
 
 ## Repository layout
 ```
 bidwise-ai/
 ├── CLAUDE.md            # this file: repo conventions
-├── README.md           # getting started & commands
+├── README.md           # getting started, commands & milestone roadmap
+├── DESIGN.md           # full design doc: scope, architecture, data model, milestones
 ├── docker-compose.yml  # engineering orchestration only (postgres/redis/backend/frontend)
 ├── Jenkinsfile         # CI pipeline
 ├── backend/            # Spring Boot (Java 21, Maven) — self-contained subproject
@@ -57,6 +58,16 @@ exports `backend/target/openapi.json` during `mvn test/verify`. The frontend use
 - Business code only calls generated hooks; **never** hand-write API requests/types.
 - Do not hand-edit `frontend/src/api/generated/` (regenerate with `pnpm run gen:api`).
 - Change a backend endpoint → regenerate → a frontend compile/CI failure surfaces drift.
+
+### 5. Keep the README roadmap in sync with milestone progress
+The README is the human-facing source of truth for project status. Whenever a
+milestone's status changes (started, completed, or re-scoped), update the README in
+the **same change**:
+- Update the `Current stage:` callout at the top of `README.md`.
+- Tick/untick the matching item in the `## Roadmap` checklist (`[x]`/`[ ]`).
+- Keep both consistent with what is actually implemented in the code (don't mark a
+  milestone done before its feature is merged). A milestone update is not complete
+  until the README reflects it.
 
 ## Common commands
 ```bash

@@ -4,9 +4,24 @@ A real-time auction marketplace for international students buying and selling
 secondhand goods. AI tackles the three big pain points: not wanting to write
 descriptions, not knowing how to price, and fear of getting ripped off.
 
-> Current stage: **P0 — project foundation** (skeleton + JWT auth + Docker +
-> Jenkins + contract pipeline). Business features (bidding / payment / AI) are
-> built depth-first across milestones P1–P6; see the design doc.
+> Current stage: **P2 complete — real-time bidding**. Features are built
+> depth-first across milestones P0–P6 (see the Roadmap below and [`DESIGN.md`](DESIGN.md)).
+
+## Roadmap
+Depth-first: get the bidding/payment spine to production grade before layering in AI.
+
+- [x] **P0 — Project foundation**: skeleton, JWT auth, Docker, Jenkins CI,
+  contract-first pipeline.
+- [x] **P1 — Listings**: listing CRUD + search/filter/sort (full-stack).
+- [x] **P2 — Real-time bidding**: Redis atomic price, anti-snipe, auto-close,
+  WebSocket live updates, bidding UI.
+- [ ] **P3 — Settlement / payment**: Stripe deposit pre-auth, automatic settlement
+  on close, idempotent webhooks.
+- [ ] **P4 — AI smart listing**: vision LLM auto-fills title/category/description +
+  RAG-based suggested price.
+- [ ] **P5 — AI valuation & moderation**: fair-value/bidding assistant, AI content
+  moderation + human review console.
+- [ ] **P6 — Hardening**: test coverage, notifications, cloud deploy.
 
 ## Tech stack
 - Backend: Spring Boot 3.x / Java 21 (Maven), Postgres, Redis, Flyway
