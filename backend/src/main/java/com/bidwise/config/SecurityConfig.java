@@ -1,6 +1,7 @@
 package com.bidwise.config;
 
 import com.bidwise.common.security.JwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,6 +34,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Internal error/forward dispatches (e.g. a controller's 404
+                        // re-dispatched to /error) carry no JWT in this stateless setup,
+                        // so they must be permitted — otherwise the entry point rewrites
+                        // every such response to 401. Spring Boot permits these by
+                        // default; overriding authorizeHttpRequests opts out, so re-add.
+                        .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD)
+                        .permitAll()
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/actuator/health",
