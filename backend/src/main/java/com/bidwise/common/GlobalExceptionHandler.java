@@ -8,6 +8,8 @@ import com.bidwise.bid.InvalidBidException;
 import com.bidwise.listing.IllegalListingStateException;
 import com.bidwise.listing.ListingAccessDeniedException;
 import com.bidwise.listing.ListingNotFoundException;
+import com.bidwise.payment.DepositRequiredException;
+import com.bidwise.payment.PaymentGatewayException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -58,6 +60,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BidTooLowException.class)
     public ResponseEntity<ApiError> handleBidTooLow(BidTooLowException ex) {
         return build(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(DepositRequiredException.class)
+    public ResponseEntity<ApiError> handleDepositRequired(DepositRequiredException ex) {
+        return build(HttpStatus.PAYMENT_REQUIRED, ex.getMessage());
+    }
+
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity<ApiError> handlePaymentGateway(PaymentGatewayException ex) {
+        return build(HttpStatus.BAD_GATEWAY, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

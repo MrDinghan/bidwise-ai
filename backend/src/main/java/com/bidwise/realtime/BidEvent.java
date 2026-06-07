@@ -6,7 +6,8 @@ import java.time.Instant;
 
 /**
  * Real-time event broadcast to subscribers of a listing's STOMP topic. Sent when a
- * bid is accepted ({@code type=BID}) and when an auction closes ({@code type=CLOSED}).
+ * bid is accepted ({@code type=BID}), when an auction closes ({@code type=CLOSED}), and
+ * when a closed auction is settled and sold ({@code type=SOLD}).
  *
  * <p>This is a WebSocket message payload, not a REST resource, so it is not part of
  * the OpenAPI contract — the frontend mirrors it with a hand-written type.
@@ -25,7 +26,8 @@ public record BidEvent(
     /** Kind of update being broadcast. */
     public enum Type {
         BID,
-        CLOSED
+        CLOSED,
+        SOLD
     }
 
     /** Snapshot event after a listing's bidding/lifecycle state changed. */

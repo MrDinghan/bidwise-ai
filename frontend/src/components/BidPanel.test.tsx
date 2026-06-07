@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import BidPanel from './BidPanel';
-import type { ListingResponse } from '@/api/generated/model';
+import type { ListingResponse, PaymentHoldResponse } from '@/api/generated/model';
 
 // Mock the generated bid hook; the panel is the unit under test.
 const placeMutate = vi.fn();
@@ -13,6 +13,15 @@ vi.mock('@/api/generated/bids/bids', () => ({
 }));
 vi.mock('@/api/generated/listings/listings', () => ({
   getGetListingQueryKey: () => ['listing'],
+}));
+
+// Deposit state is configurable per test so we can exercise the pre-auth gate.
+let depositData: PaymentHoldResponse | undefined;
+const depositMutate = vi.fn();
+vi.mock('@/api/generated/deposits/deposits', () => ({
+  useGetDeposit: () => ({ data: depositData, isLoading: false }),
+  usePlaceDeposit: () => ({ mutate: depositMutate, isPending: false }),
+  getGetDepositQueryKey: () => ['deposit'],
 }));
 
 const listing = {
@@ -30,9 +39,27 @@ const renderPanel = () =>
   );
 
 describe('BidPanel', () => {
-  beforeEach(() => placeMutate.mockReset());
+  beforeEach(() => {
+    placeMutate.mockReset();
+    depositMutate.mockReset();
+    depositData = undefined;
+  });
 
-  it('shows the minimum next bid and places a bid through the generated mutation', async () => {
+  it('prompts for a deposit when the buyer has no authorized hold', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    const depositButton = screen.getByRole('button', { name: /place deposit to bid/i });
+    expect(depositButton).toBeInTheDocument();
+    expect(screen.queryByLabelText('Bid amount')).not.toBeInTheDocument();
+
+    await user.click(depositButton);
+    expect(depositMutate).toHaveBeenCalledTimes(1);
+    expect(depositMutate.mock.calls[0][0]).toEqual({ listingId: 1 });
+  });
+
+  it('shows the minimum next bid and places a bid once a deposit is authorized', async () => {
+    depositData = { status: 'AUTHORIZED' } as PaymentHoldResponse;
     const user = userEvent.setup();
     renderPanel();
 

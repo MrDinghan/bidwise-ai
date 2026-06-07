@@ -10,10 +10,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.bidwise.bid.dto.BidResponse;
+import com.bidwise.listing.AuctionDuration;
 import com.bidwise.listing.Category;
 import com.bidwise.listing.ItemCondition;
 import com.bidwise.listing.Listing;
 import com.bidwise.listing.ListingRepository;
+import com.bidwise.payment.DepositRequiredException;
+import com.bidwise.payment.PaymentHoldRepository;
+import com.bidwise.payment.PaymentHoldStatus;
 import com.bidwise.realtime.BidEvent;
 import com.bidwise.realtime.ListingBroadcaster;
 import com.bidwise.user.Role;
@@ -44,6 +48,8 @@ class BidServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
+    private PaymentHoldRepository holdRepository;
+    @Mock
     private AtomicBidPrice atomicBidPrice;
     @Mock
     private ListingBroadcaster broadcaster;
@@ -56,9 +62,16 @@ class BidServiceTest {
     @BeforeEach
     void setUp() {
         service = new BidService(
-                listingRepository, bidRepository, userRepository, atomicBidPrice, broadcaster, 60, 120);
+                listingRepository, bidRepository, userRepository, holdRepository,
+                atomicBidPrice, broadcaster, 60, 120);
         seller = userWithId("Seller", SELLER, 1L);
         bidder = userWithId("Bidder", BIDDER, 2L);
+    }
+
+    /** Stubs an authorized deposit so the bidder clears the pre-auth gate. */
+    private void givenAuthorizedDeposit() {
+        when(holdRepository.existsByUserIdAndListingIdAndStatus(
+                2L, 100L, PaymentHoldStatus.AUTHORIZED)).thenReturn(true);
     }
 
     private User userWithId(String name, String email, long id) {
@@ -72,7 +85,7 @@ class BidServiceTest {
         Listing listing = new Listing(
                 seller, "Desk lamp", Category.FURNITURE, "A lamp", ItemCondition.GOOD,
                 List.of(), new BigDecimal("10.00"), new BigDecimal("1.00"), "Library",
-                Instant.now().plus(2, ChronoUnit.DAYS));
+                AuctionDuration.THREE_DAYS);
         listing.publish();
         ReflectionTestUtils.setField(listing, "id", 100L);
         ReflectionTestUtils.setField(listing, "endAt", endAt);
@@ -101,9 +114,21 @@ class BidServiceTest {
     }
 
     @Test
+    void biddingWithoutAnAuthorizedDepositIsRejected() {
+        when(listingRepository.findById(100L)).thenReturn(Optional.of(activeListing(future())));
+        when(userRepository.findByEmail(BIDDER)).thenReturn(Optional.of(bidder));
+        // No deposit stubbed: existsBy... returns false by default.
+
+        assertThatThrownBy(() -> service.placeBid(100L, BIDDER, new BigDecimal("11.00")))
+                .isInstanceOf(DepositRequiredException.class);
+        verify(bidRepository, never()).save(any());
+    }
+
+    @Test
     void tooLowBidIsRejectedWithTheCurrentBar() {
         when(listingRepository.findById(100L)).thenReturn(Optional.of(activeListing(future())));
         when(userRepository.findByEmail(BIDDER)).thenReturn(Optional.of(bidder));
+        givenAuthorizedDeposit();
         when(atomicBidPrice.tryRaise(eq(100L), any(), any()))
                 .thenReturn(new AtomicBidPrice.Result(false, true, new BigDecimal("12.00")));
 
@@ -119,6 +144,7 @@ class BidServiceTest {
         Listing listing = activeListing(future());
         when(listingRepository.findById(100L)).thenReturn(Optional.of(listing));
         when(userRepository.findByEmail(BIDDER)).thenReturn(Optional.of(bidder));
+        givenAuthorizedDeposit();
         when(atomicBidPrice.tryRaise(eq(100L), any(), any()))
                 .thenReturn(new AtomicBidPrice.Result(true, true, new BigDecimal("11.00")));
         when(bidRepository.save(any(Bid.class))).thenAnswer(inv -> {
@@ -140,6 +166,7 @@ class BidServiceTest {
         Listing listing = activeListing(Instant.now().plus(20, ChronoUnit.SECONDS)); // within 60s window
         when(listingRepository.findById(100L)).thenReturn(Optional.of(listing));
         when(userRepository.findByEmail(BIDDER)).thenReturn(Optional.of(bidder));
+        givenAuthorizedDeposit();
         when(atomicBidPrice.tryRaise(eq(100L), any(), any()))
                 .thenReturn(new AtomicBidPrice.Result(true, true, new BigDecimal("11.00")));
         when(bidRepository.save(any(Bid.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -156,6 +183,7 @@ class BidServiceTest {
         Listing listing = activeListing(future());
         when(listingRepository.findById(100L)).thenReturn(Optional.of(listing));
         when(userRepository.findByEmail(BIDDER)).thenReturn(Optional.of(bidder));
+        givenAuthorizedDeposit();
         when(atomicBidPrice.tryRaise(eq(100L), any(), any()))
                 .thenReturn(new AtomicBidPrice.Result(true, true, new BigDecimal("11.00")));
         when(bidRepository.save(any(Bid.class))).thenAnswer(inv -> inv.getArgument(0));

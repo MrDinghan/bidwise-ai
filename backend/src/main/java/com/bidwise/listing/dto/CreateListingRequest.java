@@ -1,19 +1,18 @@
 package com.bidwise.listing.dto;
 
+import com.bidwise.listing.AuctionDuration;
 import com.bidwise.listing.Category;
 import com.bidwise.listing.ItemCondition;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 
 /**
- * Payload to create a listing. Created in {@code DRAFT}; {@code endAt} is optional
- * until the listing is published.
+ * Payload to create a listing. Created in {@code DRAFT}; the seller picks a bounded
+ * auction {@code duration}, and the server derives {@code endAt} on publish.
  */
 public record CreateListingRequest(
         @NotBlank @Size(max = 140) String title,
@@ -24,5 +23,5 @@ public record CreateListingRequest(
         @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal startPrice,
         @NotNull @DecimalMin(value = "0.01") BigDecimal bidIncrement,
         @Size(max = 255) String pickupLocation,
-        @Future Instant endAt) {
+        @NotNull AuctionDuration duration) {
 }

@@ -7,6 +7,7 @@
  */
 import type { CreateListingRequestCategory } from './createListingRequestCategory';
 import type { CreateListingRequestCondition } from './createListingRequestCondition';
+import type { CreateListingRequestDuration } from './createListingRequestDuration';
 
 export interface CreateListingRequest {
   /**
@@ -40,5 +41,5 @@ export interface CreateListingRequest {
    * @maxLength 255
    */
   pickupLocation?: string;
-  endAt?: string;
+  duration: CreateListingRequestDuration;
 }

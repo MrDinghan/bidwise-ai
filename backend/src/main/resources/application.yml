@@ -38,6 +38,19 @@ app:
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
 
+# Payments (P3): a buyer must hold an authorized deposit before bidding; the winner is
+# captured and losers released on close. The gateway is pluggable — "fake" (default, an
+# in-memory hold ledger needing no external service) or "stripe" (test-mode SDK). The
+# deposit is a server-computed fraction of the listing start price.
+payment:
+  gateway: ${PAYMENT_GATEWAY:fake}
+  deposit:
+    fraction: ${PAYMENT_DEPOSIT_FRACTION:0.10}
+  currency: ${PAYMENT_CURRENCY:eur}
+  stripe:
+    secret-key: ${PAYMENT_STRIPE_SECRET_KEY:}
+    webhook-secret: ${PAYMENT_STRIPE_WEBHOOK_SECRET:}
+
 management:
   endpoints:
     web:

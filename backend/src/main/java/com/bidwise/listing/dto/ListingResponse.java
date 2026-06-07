@@ -1,5 +1,6 @@
 package com.bidwise.listing.dto;
 
+import com.bidwise.listing.AuctionDuration;
 import com.bidwise.listing.Category;
 import com.bidwise.listing.ItemCondition;
 import com.bidwise.listing.Listing;
@@ -28,6 +29,7 @@ public record ListingResponse(
         String currentBidderName,
         int bidCount,
         ListingStatus status,
+        AuctionDuration duration,
         Instant startAt,
         Instant endAt,
         String pickupLocation,
@@ -52,6 +54,7 @@ public record ListingResponse(
                 currentBidder == null ? null : currentBidder.getName(),
                 listing.getBidCount(),
                 listing.getStatus(),
+                listing.getDuration(),
                 listing.getStartAt(),
                 listing.getEndAt(),
                 listing.getPickupLocation(),

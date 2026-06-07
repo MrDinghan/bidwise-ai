@@ -44,7 +44,7 @@ public class ListingService {
                 request.startPrice(),
                 request.bidIncrement(),
                 request.pickupLocation(),
-                request.endAt());
+                request.duration());
         return ListingResponse.from(listingRepository.save(listing));
     }
 
@@ -71,7 +71,7 @@ public class ListingService {
                 request.startPrice(),
                 request.bidIncrement(),
                 request.pickupLocation(),
-                request.endAt());
+                request.duration());
         return ListingResponse.from(listing);
     }
 

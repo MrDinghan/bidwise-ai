@@ -211,13 +211,14 @@ const ListingDetailPage: FC = () => {
               This is your lot — bidding is open to buyers.
             </p>
           )}
-          {listing.status === 'ENDED' && (
+          {(listing.status === 'ENDED' || listing.status === 'SOLD') && (
             <div className="mt-6 border-t border-foreground/15 pt-5">
               <p className="font-display text-xl">
                 {isTopBidder ? 'You won this lot.' : `Won by ${listing.currentBidderName}`}
               </p>
               <p className="label-mono mt-1 text-muted-foreground">
                 Hammer price {formatPrice(listing.currentPrice)}
+                {listing.status === 'SOLD' && ' — deposit captured, sold.'}
               </p>
             </div>
           )}

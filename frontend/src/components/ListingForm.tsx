@@ -10,6 +10,7 @@ import {
 import {
   CreateListingRequestCategory,
   CreateListingRequestCondition,
+  CreateListingRequestDuration,
   type CreateListingRequest,
 } from '@/api/generated/model';
 import { Button } from '@/components/ui/button';
@@ -23,12 +24,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toDateTimeLocal } from '@/lib/format';
 
 type ListingFormProps = { mode: 'create' } | { mode: 'edit'; listingId: number };
 
 const labelClass = 'label-mono text-foreground';
 const fieldClass = 'rounded-sm border-foreground/20';
+
+// Bounded auction lengths the seller can choose; the server derives the end time on
+// publish (must stay within the Stripe pre-auth hold window).
+const durationLabels: Record<string, string> = {
+  [CreateListingRequestDuration.ONE_DAY]: '1 day',
+  [CreateListingRequestDuration.THREE_DAYS]: '3 days',
+  [CreateListingRequestDuration.FIVE_DAYS]: '5 days',
+};
 
 const ListingForm: FC<ListingFormProps> = (props) => {
   const navigate = useNavigate();
@@ -41,7 +49,7 @@ const ListingForm: FC<ListingFormProps> = (props) => {
   const [startPrice, setStartPrice] = useState('');
   const [bidIncrement, setBidIncrement] = useState('');
   const [pickupLocation, setPickupLocation] = useState('');
-  const [endAt, setEndAt] = useState('');
+  const [duration, setDuration] = useState<string>(CreateListingRequestDuration.THREE_DAYS);
 
   const editId = props.mode === 'edit' ? props.listingId : undefined;
   const existing = useGetListing(editId as number, {
@@ -62,7 +70,7 @@ const ListingForm: FC<ListingFormProps> = (props) => {
     setStartPrice(listing.startPrice != null ? String(listing.startPrice) : '');
     setBidIncrement(listing.bidIncrement != null ? String(listing.bidIncrement) : '');
     setPickupLocation(listing.pickupLocation ?? '');
-    setEndAt(toDateTimeLocal(listing.endAt));
+    setDuration(listing.duration ?? CreateListingRequestDuration.THREE_DAYS);
   }, [existing.data]);
 
   const createMutation = useCreateListing();
@@ -81,7 +89,7 @@ const ListingForm: FC<ListingFormProps> = (props) => {
     startPrice: Number(startPrice),
     bidIncrement: Number(bidIncrement),
     pickupLocation: pickupLocation || undefined,
-    endAt: endAt ? new Date(endAt).toISOString() : undefined,
+    duration: duration as CreateListingRequest['duration'],
   });
 
   const onSubmit = (e: FormEvent): void => {
@@ -253,16 +261,24 @@ const ListingForm: FC<ListingFormProps> = (props) => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endAt" className={labelClass}>
-                Ends at
+              <Label htmlFor="duration" className={labelClass}>
+                Auction duration
               </Label>
-              <Input
-                id="endAt"
-                type="datetime-local"
-                value={endAt}
-                onChange={(e) => setEndAt(e.target.value)}
-                className={`${fieldClass} font-mono`}
-              />
+              <Select value={duration} onValueChange={setDuration}>
+                <SelectTrigger id="duration" className={`w-full ${fieldClass}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(CreateListingRequestDuration).map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {durationLabels[value]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="label-mono text-muted-foreground">
+                Starts when you publish; ends after this window.
+              </p>
             </div>
           </div>
 

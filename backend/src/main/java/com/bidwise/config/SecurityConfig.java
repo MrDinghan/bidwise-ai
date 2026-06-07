@@ -40,6 +40,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                // Payment webhooks authenticate via signature, not JWT.
+                                "/api/webhooks/**",
                                 // WebSocket handshake; topics carry only public listing state.
                                 "/ws/**")
                         .permitAll()

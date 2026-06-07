@@ -7,6 +7,7 @@
  */
 import type { UpdateListingRequestCategory } from './updateListingRequestCategory';
 import type { UpdateListingRequestCondition } from './updateListingRequestCondition';
+import type { UpdateListingRequestDuration } from './updateListingRequestDuration';
 
 export interface UpdateListingRequest {
   /**
@@ -40,5 +41,5 @@ export interface UpdateListingRequest {
    * @maxLength 255
    */
   pickupLocation?: string;
-  endAt?: string;
+  duration: UpdateListingRequestDuration;
 }

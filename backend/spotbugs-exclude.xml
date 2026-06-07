@@ -20,6 +20,13 @@
             <Class name="com.bidwise.bid.BidController"/>
             <Class name="com.bidwise.bid.AtomicBidPrice"/>
             <Class name="com.bidwise.realtime.ListingBroadcaster"/>
+            <Class name="com.bidwise.payment.DepositService"/>
+            <Class name="com.bidwise.payment.SettlementService"/>
+            <Class name="com.bidwise.payment.WebhookService"/>
+            <Class name="com.bidwise.payment.PaymentController"/>
+            <Class name="com.bidwise.payment.StripeWebhookController"/>
+            <Class name="com.bidwise.payment.FakePaymentGateway"/>
+            <Class name="com.bidwise.payment.StripePaymentGateway"/>
         </Or>
     </Match>
 
@@ -43,6 +50,9 @@
             <Class name="com.bidwise.bid.dto.BidResponse"/>
             <Class name="com.bidwise.bid.dto.BidPageResponse"/>
             <Class name="com.bidwise.realtime.BidEvent"/>
+            <Class name="com.bidwise.payment.PaymentHold"/>
+            <Class name="com.bidwise.payment.Settlement"/>
+            <Class name="com.bidwise.payment.dto.PaymentHoldResponse"/>
         </Or>
     </Match>
 

@@ -8,6 +8,7 @@
 import type { ListingResponseCategory } from './listingResponseCategory';
 import type { ListingResponseCondition } from './listingResponseCondition';
 import type { ListingResponseStatus } from './listingResponseStatus';
+import type { ListingResponseDuration } from './listingResponseDuration';
 
 export interface ListingResponse {
   id?: number;
@@ -25,6 +26,7 @@ export interface ListingResponse {
   currentBidderName?: string;
   bidCount?: number;
   status?: ListingResponseStatus;
+  duration?: ListingResponseDuration;
   startAt?: string;
   endAt?: string;
   pickupLocation?: string;

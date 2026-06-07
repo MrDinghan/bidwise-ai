@@ -9,8 +9,6 @@ import com.bidwise.listing.dto.ListingPageResponse;
 import com.bidwise.listing.dto.ListingResponse;
 import com.bidwise.listing.dto.UpdateListingRequest;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +58,7 @@ class ListingFlowIntegrationTest {
                 new BigDecimal("50.00"),
                 new BigDecimal("5.00"),
                 "Downtown pickup",
-                Instant.now().plus(3, ChronoUnit.DAYS));
+                AuctionDuration.THREE_DAYS);
     }
 
     @Test
@@ -115,7 +113,7 @@ class ListingFlowIntegrationTest {
         String intruderToken = registerAndGetToken("Intruder", "intruder@example.com");
         var update = new UpdateListingRequest(
                 "Hijacked title", Category.OTHER, "nope", ItemCondition.POOR, List.of(),
-                new BigDecimal("1.00"), new BigDecimal("1.00"), null, null);
+                new BigDecimal("1.00"), new BigDecimal("1.00"), null, AuctionDuration.ONE_DAY);
 
         ResponseEntity<String> response = rest.exchange(
                 "/api/listings/" + id, HttpMethod.PUT,

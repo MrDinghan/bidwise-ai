@@ -14,8 +14,6 @@ import com.bidwise.user.Role;
 import com.bidwise.user.User;
 import com.bidwise.user.UserRepository;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -51,7 +49,7 @@ class ListingServiceTest {
                 new BigDecimal("10.00"),
                 new BigDecimal("1.00"),
                 "Campus library",
-                Instant.now().plus(2, ChronoUnit.DAYS));
+                AuctionDuration.THREE_DAYS);
     }
 
     private Listing draftListing() {
@@ -59,7 +57,7 @@ class ListingServiceTest {
         return new Listing(
                 seller, req.title(), req.category(), req.description(), req.condition(),
                 req.photos(), req.startPrice(), req.bidIncrement(), req.pickupLocation(),
-                req.endAt());
+                req.duration());
     }
 
     @Test
@@ -108,7 +106,7 @@ class ListingServiceTest {
         when(listingRepository.findById(1L)).thenReturn(Optional.of(draftListing()));
         var update = new UpdateListingRequest(
                 "Hacked", Category.OTHER, "x", ItemCondition.POOR, List.of(),
-                new BigDecimal("1.00"), new BigDecimal("1.00"), null, null);
+                new BigDecimal("1.00"), new BigDecimal("1.00"), null, AuctionDuration.ONE_DAY);
 
         assertThatThrownBy(() -> service.update(1L, OTHER, update))
                 .isInstanceOf(ListingAccessDeniedException.class);

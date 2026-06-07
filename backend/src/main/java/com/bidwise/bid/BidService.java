@@ -7,6 +7,9 @@ import com.bidwise.listing.ListingAccessDeniedException;
 import com.bidwise.listing.ListingNotFoundException;
 import com.bidwise.listing.ListingRepository;
 import com.bidwise.listing.ListingStatus;
+import com.bidwise.payment.DepositRequiredException;
+import com.bidwise.payment.PaymentHoldRepository;
+import com.bidwise.payment.PaymentHoldStatus;
 import com.bidwise.realtime.BidEvent;
 import com.bidwise.realtime.ListingBroadcaster;
 import com.bidwise.user.User;
@@ -34,6 +37,7 @@ public class BidService {
     private final ListingRepository listingRepository;
     private final BidRepository bidRepository;
     private final UserRepository userRepository;
+    private final PaymentHoldRepository holdRepository;
     private final AtomicBidPrice atomicBidPrice;
     private final ListingBroadcaster broadcaster;
     private final Duration antiSnipeWindow;
@@ -43,6 +47,7 @@ public class BidService {
             ListingRepository listingRepository,
             BidRepository bidRepository,
             UserRepository userRepository,
+            PaymentHoldRepository holdRepository,
             AtomicBidPrice atomicBidPrice,
             ListingBroadcaster broadcaster,
             @Value("${auction.anti-snipe.window-seconds:60}") long antiSnipeWindowSeconds,
@@ -50,6 +55,7 @@ public class BidService {
         this.listingRepository = listingRepository;
         this.bidRepository = bidRepository;
         this.userRepository = userRepository;
+        this.holdRepository = holdRepository;
         this.atomicBidPrice = atomicBidPrice;
         this.broadcaster = broadcaster;
         this.antiSnipeWindow = Duration.ofSeconds(antiSnipeWindowSeconds);
@@ -78,6 +84,11 @@ public class BidService {
         }
         if (listing.isOwnedBy(bidder.getId())) {
             throw new InvalidBidException("You cannot bid on your own listing");
+        }
+        // A buyer must hold an authorized deposit before bidding (pre-auth gate, P3).
+        if (!holdRepository.existsByUserIdAndListingIdAndStatus(
+                bidder.getId(), listingId, PaymentHoldStatus.AUTHORIZED)) {
+            throw new DepositRequiredException();
         }
 
         BigDecimal increment = listing.getBidIncrement();

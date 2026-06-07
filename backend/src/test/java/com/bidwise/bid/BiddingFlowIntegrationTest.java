@@ -8,6 +8,7 @@ import com.bidwise.bid.dto.BidPageResponse;
 import com.bidwise.bid.dto.BidResponse;
 import com.bidwise.bid.dto.PlaceBidRequest;
 import com.bidwise.listing.AuctionCloseService;
+import com.bidwise.listing.AuctionDuration;
 import com.bidwise.listing.Category;
 import com.bidwise.listing.ItemCondition;
 import com.bidwise.listing.Listing;
@@ -15,9 +16,10 @@ import com.bidwise.listing.ListingRepository;
 import com.bidwise.listing.ListingStatus;
 import com.bidwise.listing.dto.CreateListingRequest;
 import com.bidwise.listing.dto.ListingResponse;
+import com.bidwise.payment.PaymentHoldRepository;
+import com.bidwise.payment.PaymentHoldStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +68,8 @@ class BiddingFlowIntegrationTest {
     private AuctionCloseService auctionCloseService;
     @Autowired
     private ListingRepository listingRepository;
+    @Autowired
+    private PaymentHoldRepository holdRepository;
 
     private AuthResponse register(String name, String email) {
         ResponseEntity<AuthResponse> response = rest.postForEntity(
@@ -87,7 +91,7 @@ class BiddingFlowIntegrationTest {
                 "Vintage camera", Category.ELECTRONICS, "Retro film camera",
                 ItemCondition.LIKE_NEW, List.of("https://img.example/cam.jpg"),
                 new BigDecimal("10.00"), new BigDecimal("1.00"), "Downtown",
-                Instant.now().plus(3, ChronoUnit.DAYS));
+                AuctionDuration.THREE_DAYS);
     }
 
     private Long createAndPublish(String token) {
@@ -98,6 +102,13 @@ class BiddingFlowIntegrationTest {
         rest.exchange("/api/listings/" + id + "/publish", HttpMethod.POST,
                 new HttpEntity<>(bearer(token)), ListingResponse.class);
         return id;
+    }
+
+    /** Authorizes the bidding deposit (required before placing a bid). */
+    private ResponseEntity<String> placeDeposit(Long listingId, String token) {
+        return rest.exchange(
+                "/api/listings/" + listingId + "/deposit", HttpMethod.POST,
+                new HttpEntity<>(bearer(token)), String.class);
     }
 
     private ResponseEntity<BidResponse> bid(Long listingId, String token, String amount) {
@@ -117,6 +128,14 @@ class BiddingFlowIntegrationTest {
         AuthResponse alice = register("Alice", "alice@bid.com");
         AuthResponse bob = register("Bob", "bob@bid.com");
         Long id = createAndPublish(seller);
+
+        // A bid without an authorized deposit is rejected (402 Payment Required).
+        assertThat(bid(id, alice.token(), "10.00").getStatusCode())
+                .isEqualTo(HttpStatus.PAYMENT_REQUIRED);
+
+        // Buyers authorize a deposit before bidding.
+        assertThat(placeDeposit(id, alice.token()).getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        placeDeposit(id, bob.token());
 
         // Opening bid clears at the start price.
         ResponseEntity<BidResponse> opening = bid(id, alice.token(), "10.00");
@@ -156,18 +175,24 @@ class BiddingFlowIntegrationTest {
     }
 
     @Test
-    void auctionWithBidsClosesAsEndedWithAWinner() {
+    void auctionWithBidsClosesAndSettlesAsSold() {
         String seller = register("Seller2", "seller2@bid.com").token();
         AuthResponse alice = register("Alice2", "alice2@bid.com");
         Long id = createAndPublish(seller);
+        placeDeposit(id, alice.token());
         bid(id, alice.token(), "10.00");
 
         expireNow(id);
         auctionCloseService.closeDueAuctions();
 
+        // Close → settle: the winner's deposit is captured and the lot is SOLD.
         ListingResponse closed = getListing(id);
-        assertThat(closed.status()).isEqualTo(ListingStatus.ENDED);
+        assertThat(closed.status()).isEqualTo(ListingStatus.SOLD);
         assertThat(closed.currentBidderId()).isEqualTo(alice.user().id());
+        assertThat(holdRepository
+                .findByUserIdAndListingId(alice.user().id(), id)
+                .orElseThrow()
+                .getStatus()).isEqualTo(PaymentHoldStatus.CAPTURED);
     }
 
     @Test

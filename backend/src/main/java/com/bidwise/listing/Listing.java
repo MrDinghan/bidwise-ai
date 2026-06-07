@@ -86,6 +86,14 @@ public class Listing {
     @Column(nullable = false, length = 20)
     private ListingStatus status;
 
+    /**
+     * Seller-chosen auction length. The end time is derived from it on
+     * {@link #publish()}; clients never supply {@code endAt} directly.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private AuctionDuration duration;
+
     @Column(name = "start_at")
     private Instant startAt;
 
@@ -122,7 +130,7 @@ public class Listing {
             BigDecimal startPrice,
             BigDecimal bidIncrement,
             String pickupLocation,
-            Instant endAt) {
+            AuctionDuration duration) {
         this.seller = seller;
         this.title = title;
         this.category = category;
@@ -133,7 +141,7 @@ public class Listing {
         this.bidIncrement = bidIncrement;
         this.currentPrice = startPrice;
         this.pickupLocation = pickupLocation;
-        this.endAt = endAt;
+        this.duration = duration;
         this.status = ListingStatus.DRAFT;
         Instant now = Instant.now();
         this.createdAt = now;
@@ -158,7 +166,7 @@ public class Listing {
             BigDecimal startPrice,
             BigDecimal bidIncrement,
             String pickupLocation,
-            Instant endAt) {
+            AuctionDuration duration) {
         if (status != ListingStatus.DRAFT && status != ListingStatus.ACTIVE) {
             throw new IllegalListingStateException(
                     "Listing can only be edited while it is a draft or active");
@@ -175,25 +183,39 @@ public class Listing {
             this.currentPrice = startPrice;
         }
         this.pickupLocation = pickupLocation;
-        this.endAt = endAt;
+        this.duration = duration;
         this.updatedAt = Instant.now();
     }
 
     /**
-     * Publishes a draft: opens the auction window now and makes it searchable.
-     * Requires a future {@code endAt}.
+     * Publishes a draft: opens the auction window now and makes it searchable. The
+     * end time is computed server-side from the seller's chosen {@link #duration}
+     * ({@code endAt = now + duration}); it is never supplied by the client.
      */
     public void publish() {
         if (status != ListingStatus.DRAFT) {
             throw new IllegalListingStateException("Only a draft listing can be published");
         }
-        Instant now = Instant.now();
-        if (endAt == null || !endAt.isAfter(now)) {
-            throw new IllegalListingStateException("Listing must have an end time in the future");
+        if (duration == null) {
+            throw new IllegalListingStateException("Listing must have an auction duration");
         }
+        Instant now = Instant.now();
         this.startAt = now;
+        this.endAt = now.plus(duration.toDuration());
         this.status = ListingStatus.ACTIVE;
         this.updatedAt = now;
+    }
+
+    /**
+     * Marks an ended auction as sold once its winning deposit has been captured
+     * (settlement, P3). Idempotent guard: only an {@code ENDED} listing can be sold.
+     */
+    public void markSold() {
+        if (status != ListingStatus.ENDED) {
+            throw new IllegalListingStateException("Only an ended auction can be marked sold");
+        }
+        this.status = ListingStatus.SOLD;
+        this.updatedAt = Instant.now();
     }
 
     /** Cancels an active listing (no winner). */

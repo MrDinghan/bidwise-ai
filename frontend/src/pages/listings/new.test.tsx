@@ -38,5 +38,8 @@ describe('New listing form', () => {
     expect(payload.data.title).toBe('Desk lamp');
     expect(payload.data.startPrice).toBe(10);
     expect(payload.data.bidIncrement).toBe(1);
+    // Duration defaults to the 3-day option; endAt is no longer sent.
+    expect(payload.data.duration).toBe('THREE_DAYS');
+    expect(payload.data.endAt).toBeUndefined();
   });
 });

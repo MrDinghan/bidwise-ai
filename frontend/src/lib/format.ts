@@ -41,13 +41,3 @@ export const formatTimeAgo = (iso?: string): string => {
   }
   return `${Math.floor(hours / 24)}d ago`;
 };
-
-/** Converts an ISO timestamp to the value a `datetime-local` input expects. */
-export const toDateTimeLocal = (iso?: string): string => {
-  if (!iso) {
-    return '';
-  }
-  const date = new Date(iso);
-  const offsetMs = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-};
